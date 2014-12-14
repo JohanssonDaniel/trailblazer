@@ -16,10 +16,12 @@ void depthFirstSearchHelper(BasicGraph& graph, vector<Vertex*> &path, Vertex* st
     if (start == end){                              //om vi kommit till slutet
         finished = true;
     }else{
-        for(Edge* edge : graph.getEdgeSet(start)){  //För varje edge för den här punkten
-            if(!(edge->visited) && !finished){      //Om vi inte redan varit här och vi är inte klara
-                graph.getInverseEdge(edge)->visited = true;
-                depthFirstSearchHelper(graph,path,edge->finish,end,finished);
+        auto edges = start->arcs;
+        for(auto it = edges.begin(); !finished && it != edges.end(); ++it){  //För varje edge för den här punkten
+            Arc* tempArc = *it;
+            if(!(tempArc->visited) && !finished && !(tempArc->finish->getColor() == GREEN)){      //Om vi inte redan varit här och vi är inte klara
+                graph.getInverseEdge(tempArc)->visited = true;
+                depthFirstSearchHelper(graph,path,tempArc->finish,end,finished);
             }
         }
     }
@@ -31,23 +33,16 @@ void depthFirstSearchHelper(BasicGraph& graph, vector<Vertex*> &path, Vertex* st
     }
 }
 vector<Node *> depthFirstSearch(BasicGraph& graph, Vertex* start, Vertex* end) {
-    // TODO: implement this function; remove these comments
-    //       (The function body code provided below is just a stub that returns
-    //        an empty vector so that the overall project will compile.
-    //        You should remove that code and replace it with your implementation.)
-
-
+   graph.resetData();
     vector<Vertex*> path;
     bool finished = false;
+
     depthFirstSearchHelper(graph,path, start,end,finished);
     return path;
 }
 
 vector<Node *> breadthFirstSearch(BasicGraph& graph, Vertex* start, Vertex* end) {
-    // TODO: implement this function; remove these comments
-    //       (The function body code provided below is just a stub that returns
-    //        an empty vector so that the overall project will compile.
-    //        You should remove that code and replace it with your implementation.)
+
     vector<Vertex*> path;
     return path;
 }
