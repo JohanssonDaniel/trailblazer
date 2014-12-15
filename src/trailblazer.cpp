@@ -89,8 +89,25 @@ public:
         return v1->cost > v2->cost;
     }
 };
+void setToInfinity(BasicGraph& graph){
+    for(Edge* edge : graph.getEdgeSet()){
+        edge->finish->cost = POSITIVE_INFINITY;
+    }
+}
+
+bool checkInPriorityQueue(PriorityQueue<Vertex*> pq, Vertex* v){
+    while(!(pq.isEmpty())){
+        Vertex* v2 = pq.dequeue();
+        if(v == v2) {
+            return true;
+        }
+    }
+    return false;
+}
+
 vector<Node *> dijkstrasAlgorithm(BasicGraph& graph, Vertex* start, Vertex* end) {
     graph.resetData();
+    setToInfinity(graph);
     vector<Vertex*> path;
     start->cost = 0;
     start->visited = true;
@@ -98,22 +115,24 @@ vector<Node *> dijkstrasAlgorithm(BasicGraph& graph, Vertex* start, Vertex* end)
     start->setColor(YELLOW);
     pq.enqueue(start,start->cost);
     while(!(pq.isEmpty())){
-
-        cout << "Highest cost: " << pq.peek()->toString() << endl;
         Vertex* v = pq.dequeue();
         v->setColor(GREEN);
+        v->visited = true;
         if(v == end){
             pq.clear();
         }else{
             for(Edge* edge : graph.getEdgeSet(v)){
                 if(!(edge->finish->visited)){
                     edge->finish->setColor(YELLOW);
-                    edge->finish->visited = true;
-                    int cost = (v->cost + edge->cost);
-                    if(cost < edge->finish->cost || edge->finish->cost == 0.0){
+                    double cost = (v->cost + edge->cost);
+                    if(cost < edge->finish->cost){
                         edge->finish->cost = cost;
                         edge->finish->previous = v;
-                        pq.enqueue(edge->finish,cost);
+                        if(checkInPriorityQueue(pq,edge->finish)){
+                            pq.changePriority(edge->finish,cost);
+                        }else{
+                            pq.enqueue(edge->finish,cost);
+                        }
                     }
                 }
             }
@@ -131,10 +150,47 @@ vector<Node *> dijkstrasAlgorithm(BasicGraph& graph, Vertex* start, Vertex* end)
 }
 
 vector<Node *> aStar(BasicGraph& graph, Vertex* start, Vertex* end) {
-    // TODO: implement this function; remove these comments
-    //       (The function body code provided below is just a stub that returns
-    //        an empty vector so that the overall project will compile.
-    //        You should remove that code and replace it with your implementation.)
+    graph.resetData();
+    setToInfinity(graph);
     vector<Vertex*> path;
+    start->cost = 0;
+    start->visited = true;
+    PriorityQueue<Vertex*> pq;
+    start->setColor(YELLOW);
+    pq.enqueue(start,start->heuristic(end));
+    while(!(pq.isEmpty())){
+        Vertex* v = pq.dequeue();
+        v->setColor(GREEN);
+        v->visited = true;
+        if(v == end){
+            pq.clear();
+        }else{
+            for(Edge* edge : graph.getEdgeSet(v)){
+                if(!(edge->finish->visited)){
+                    edge->finish->setColor(YELLOW);
+                    double cost = (v->cost + edge->cost);
+                    if(cost < edge->finish->cost){
+                        edge->finish->cost = cost;
+                        edge->finish->previous = v;
+                        double endCost = cost + edge->finish->heuristic(end);
+
+                        if(checkInPriorityQueue(pq,edge->finish)){
+                            pq.changePriority(edge->finish,endCost);
+                        }else{
+                            pq.enqueue(edge->finish,endCost);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Vertex* tempV = end;
+    while(tempV != start){
+        path.emplace(path.begin(),tempV);
+        tempV = tempV->previous;
+    }
+    path.emplace(path.begin(),tempV);
+
     return path;
 }
