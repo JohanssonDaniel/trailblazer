@@ -61,14 +61,14 @@ vector<Node *> breadthFirstSearch(BasicGraph& graph, Vertex* start, Vertex* end)
     while(!(vQueue.empty())){
         Vertex* v = vQueue.front();
         vQueue.pop();
-        if(v == end){
+        if(v == end){               //Om vi nått slutet, töm kön för att stoppa while loopen
             emptyQueue(vQueue);
         }else{
-            for(Edge *tempEdge: graph.getEdgeSet(v)){
-                if(!(tempEdge->finish->visited)){
+            for(Edge *tempEdge: graph.getEdgeSet(v)){   //Loopa över alla närliggande bågar
+                if(!(tempEdge->finish->visited)){       //Om vi inte redan varit vid noden i bågslutet
                     tempEdge->finish->visited = true;
                     tempEdge->finish->setColor(YELLOW);
-                    tempEdge->finish->previous = v;
+                    tempEdge->finish->previous = v;     //Sätt previous till v för att kunna bygga upp path senare
                     vQueue.push(tempEdge->finish);
                 }
             }
@@ -76,22 +76,17 @@ vector<Node *> breadthFirstSearch(BasicGraph& graph, Vertex* start, Vertex* end)
         v->setColor(GREEN);
     }
     Vertex* tempV = end;
-    while(tempV != start){
+    while(tempV != start){                              //Går igenom alla previous och lägger in dem först i path
         path.emplace(path.begin(),tempV);
         tempV = tempV->previous;
     }
     path.emplace(path.begin(),tempV);
     return path;
 }
-class lessThanByCost{
-public:
-    bool operator()(Vertex* v1, Vertex* v2){
-        return v1->cost > v2->cost;
-    }
-};
+
 void setToInfinity(BasicGraph& graph){
     for(Edge* edge : graph.getEdgeSet()){
-        edge->finish->cost = POSITIVE_INFINITY;
+        edge->finish->cost = POSITIVE_INFINITY;         //Sätter alla noders cost till inf
     }
 }
 
@@ -113,25 +108,25 @@ vector<Node *> dijkstrasAlgorithm(BasicGraph& graph, Vertex* start, Vertex* end)
     start->visited = true;
     PriorityQueue<Vertex*> pq;
     start->setColor(YELLOW);
-    pq.enqueue(start,start->cost);
+    pq.enqueue(start,start->cost);  //Lägger in start med 0 som kostnad
     while(!(pq.isEmpty())){
         Vertex* v = pq.dequeue();
         v->setColor(GREEN);
         v->visited = true;
-        if(v == end){
+        if(v == end){               //Om vi nått slutet töm kön för att avsluta while loopen
             pq.clear();
         }else{
             for(Edge* edge : graph.getEdgeSet(v)){
-                if(!(edge->finish->visited)){
+                if(!(edge->finish->visited)){   //Om vi inte redan varit i slutet av bågen
                     edge->finish->setColor(YELLOW);
-                    double cost = (v->cost + edge->cost);
-                    if(cost < edge->finish->cost){
-                        edge->finish->cost = cost;
-                        edge->finish->previous = v;
-                        if(checkInPriorityQueue(pq,edge->finish)){
-                            pq.changePriority(edge->finish,cost);
+                    double cost = (v->cost + edge->cost);   //Räkna ut kostnaden för noden med v:s kostnad + bågkostnaden
+                    if(cost < edge->finish->cost){          //Om den nya konstaden är lägre
+                        edge->finish->cost = cost;          //Uppdatera kostnaden
+                        edge->finish->previous = v;         //Sätt previous för att kunna backtracka
+                        if(checkInPriorityQueue(pq,edge->finish)){ //Finns den redan i kön
+                            pq.changePriority(edge->finish,cost);   //Uppdatera kostnaden
                         }else{
-                            pq.enqueue(edge->finish,cost);
+                            pq.enqueue(edge->finish,cost);          //Annars lägg in den som nytt element i kön
                         }
                     }
                 }
@@ -141,14 +136,14 @@ vector<Node *> dijkstrasAlgorithm(BasicGraph& graph, Vertex* start, Vertex* end)
 
     Vertex* tempV = end;
     while(tempV != start){
-        path.emplace(path.begin(),tempV);
+        path.emplace(path.begin(),tempV);  //Går igenom alla previous och lägger in dem först i path
         tempV = tempV->previous;
     }
     path.emplace(path.begin(),tempV);
 
     return path;
 }
-
+//Samma som dijsktras
 vector<Node *> aStar(BasicGraph& graph, Vertex* start, Vertex* end) {
     graph.resetData();
     setToInfinity(graph);
@@ -157,7 +152,7 @@ vector<Node *> aStar(BasicGraph& graph, Vertex* start, Vertex* end) {
     start->visited = true;
     PriorityQueue<Vertex*> pq;
     start->setColor(YELLOW);
-    pq.enqueue(start,start->heuristic(end));
+    pq.enqueue(start,start->heuristic(end)); //Förutom att kostnaden till slutet används
     while(!(pq.isEmpty())){
         Vertex* v = pq.dequeue();
         v->setColor(GREEN);
